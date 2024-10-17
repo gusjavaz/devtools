@@ -72,6 +72,36 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+  build-node-ton:
+    name: Build TON node image
+    runs-on: ubuntu-latest-16xlarge
+    needs:
+      - build-base
+
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Push image digest
+        uses: ./.github/workflows/actions/docker-build-image
+        with:
+          image: devtools-dev-node-ton-my-local-ton
+          target: node-ton-my-local-ton
+          platform: ${{ matrix.platform }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
   push-base:
     name: Push base image
     runs-on: ubuntu-latest-4xlarge
@@ -103,5 +133,22 @@ jobs:
         uses: ./.github/workflows/actions/merge-docker-image
         with:
           image: devtools-dev-node-evm-hardhat
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+  push-node-ton:
+    name: Push EVM node image
+    runs-on: ubuntu-latest-4xlarge
+    needs:
+      - build-node-ton
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Push image
+        uses: ./.github/workflows/actions/merge-docker-image
+        with:
+          image: devtools-dev-node-ton-my-local-ton
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
